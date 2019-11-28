@@ -22,43 +22,44 @@ const { dinosaurs, humans, movies } = require('./datasets/dinosaurs');
 // DATASET: kitties from ./datasets/kitties
 const kittyPrompts = {
   orangeKittyNames() {
-
-    // Return an array of just the names of kitties who are orange e.g.
-    // ['Tiger', 'Snickers']
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
-
-    // Annotation:
-    // Write your annotation here as a comment
+    return filterCat = kitties.reduce((acc, cat) => {
+      if(cat.color === 'orange') {
+        acc.push(cat.name);
+      }
+      return acc;
+    }, []);
   },
+  // Annotation:
+  // As we want to return a single array based on certain
+  // criteria it would be best to use reduce here, while
+  // filter would return an array of the results that matched
+  // that criteria, it would return the whole object rather
+  // than a new array of the names
 
   sortByAge() {
-    // Sort the kitties by their age
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
-
-    // Annotation:
-    // Write your annotation here as a comment
+    return kitties.sort((a, b) => (b.age - a.age));
   },
+  // Annotation:
+  // to sort the order we can utilize the sort prototype
+  // sort looks for a positive or negative comparison
+  // by taking the second element (b) and subtracting the first (a)
+  // we say if the result is positive shift that number to the left
+  // this sorts descending
 
   growUp() {
-    // Return an array of kitties who have all grown up by 2 years e.g.
-    // [{
-    //   name: 'Felicia',
-    //   age: 4,
-    //   color: 'grey'
-    // },
-    // {
-    //   name: 'Tiger',
-    //   age: 7,
-    //   color: 'orange'
-    // },
-    // ...etc]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = kitties.map(cat => {
+      const olderCat = {};
+      olderCat.name = cat.name;
+      olderCat.age = cat.age + 2;
+      olderCat.color = cat.color;
+      return olderCat;
+    });
     return result;
   }
+  // Annotation:
+  // As we want to create another array of objects the same
+  // length as the original array with a slight modification
+  // we can use the map prototype
 };
 
 
@@ -80,19 +81,27 @@ const kittyPrompts = {
 // DATASET: clubs from ./datasets/clubs
 const clubPrompts = {
   membersBelongingToClubs() {
-    // Create an object whose keys are the names of people, and whose values are
-    // arrays that include the names of the clubs that person is a part of. e.g.
-    // {
-    //   Louisa: ['Drama', 'Art'],
-    //   Pam: ['Drama', 'Art', 'Chess'],
-    //   ...etc
-    // }
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const members = {};
+    clubs.forEach(club => {
+      club.members.forEach(name => {
+        if (!members[name]) {
+          members[name] = [club.club];
+        } else {
+          members[name].push(club.club);
+        }
+      });
+    });
+    return members;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we are going to want to do two rounds of iteraton
+    // first we want to run through each club, and then
+    // run through each member of that club, we want to comprise
+    // a new object of members, and when we find a new member
+    // that does not exist yet we want to add as a key to that
+    // object with a value of an array containing the club they are in
+    // for existing members (ie repeat instances) we simply want to add
+    // the activity to that existing members array.
   }
 };
 
@@ -108,10 +117,6 @@ const clubPrompts = {
 // ---------------------------------------------------------------------------
 
 
-
-
-
-
 // DATASET: mods from ./datasets/mods
 const modPrompts = {
   studentsPerMod() {
@@ -124,11 +129,21 @@ const modPrompts = {
     //   { mod: 4, studentsPerInstructor: 8 }
     // ]
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = mods.map(mod => {
+      const studentRatio = {};
+
+      studentRatio.mod = mod.mod;
+      studentRatio.studentsPerInstructor = mod.students / mod.instructors;
+
+      return studentRatio;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // As we want to return an array of the same size here we can utilize
+    // map, we want to create a new object which has a mod property with the respective
+    // mod number from the old array, and a studentsPerInstructor property
+    // which has a value of the students divided by instructors
   }
 };
 
@@ -151,58 +166,41 @@ const modPrompts = {
 // DATASET: cakes from ./datasets/cakes
 const cakePrompts = {
   stockPerCake() {
-    // Return an array of objects that include just the flavor of the cake and how
-    // much of that cake is in stock e.g.
-    // [
-    //    { flavor: 'dark chocolate', inStock: 15 },
-    //    { flavor: 'yellow', inStock: 14 },
-    //    ..etc
-    // ]
+    const result = cakes.map(cake => {
+      const cakeCount = {};
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+      cakeCount.flavor = cake.cakeFlavor;
+      cakeCount.inStock = cake.inStock;
+
+      return cakeCount;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Similar to above, as we are returning an array
+    // of the same length we can utilize the map prototype
   },
 
   onlyInStock() {
-    // Return an array of only the cakes that are in stock
-    // e.g.
-    // [
-    //   {
-    //   cakeFlavor: 'dark chocolate',
-    //   filling: null,
-    //   frosting: 'dark chocolate ganache',
-    //   toppings: ['dutch process cocoa', 'toasted sugar', 'smoked sea salt'],
-    //   inStock: 15
-    // },
-    // {
-    //   cakeFlavor: 'yellow',
-    //   filling: 'citrus glaze',
-    //   frosting: 'chantilly cream',
-    //   toppings: ['berries', 'edible flowers'],
-    //   inStock: 14
-    // },
-    // ..etc
-    // ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cakes.filter(cake => cake.inStock > 0);
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // As we want to return a paired down version of the original
+    // array based on criteria, and we want to return more than 
+    // one match, we can utilize filter here.
   },
 
   totalInventory() {
-    // Return the total amount of cakes in stock e.g.
-    // 59
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cakes.reduce((acc, cake) => {
+      acc += cake.inStock;
+      return acc;
+    }, 0);
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // As we want to return a singlular value based on the total
+    // array we can use reduce here and accumulate the stock values
   },
 
   allToppings() {
@@ -210,11 +208,22 @@ const cakePrompts = {
     // every cake in the dataset e.g.
     // ['dutch process cocoa', 'toasted sugar', 'smoked sea salt', 'berries', ..etc]
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cakes.reduce((acc, cake) => {
+      cake.toppings.forEach(topping => {
+        if (!acc.includes(topping)) {
+          acc.push(topping);
+        }       
+      });
+      return acc;
+    }, []);
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Similar to the last problem, as we want to return a single
+    // array we can utilize reduce and add to an array accumulator.
+    // However, because cake.toppings is also an array we need to iterate
+    // through that and see if our accumulator already contains the topping.
+    // if not we add it to the array.
   },
 
   groceryList() {
@@ -228,11 +237,23 @@ const cakePrompts = {
     //    ...etc
     // }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cakes.reduce((acc, cake) => {
+      cake.toppings.forEach(topping => {
+        if (!acc[topping]) {
+          acc[topping] = 1;
+        } else {
+          acc[topping] += 1;
+        }
+      });
+      return acc;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // This runs similar to the last problem, except now we are
+    // working with an object. For each topping we check if it 
+    // already exists and if not add it to the accumulator with a 
+    // starting value of 1, if it does already exist iterate by 1
   }
 };
 
@@ -255,44 +276,42 @@ const cakePrompts = {
 // DATASET: classrooms from ./datasets/classrooms
 const classPrompts = {
   feClassrooms() {
-    // Create an array of just the front-end classrooms. e.g.
-    // [
-    //   { roomLetter: 'A', program: 'FE', capacity: 32 },
-    //   { roomLetter: 'C', program: 'FE', capacity: 27 },
-    //   { roomLetter: 'E', program: 'FE', capacity: 22 },
-    //   { roomLetter: 'G', program: 'FE', capacity: 29 }
-    // ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = classrooms.filter(classroom => classroom.program === 'FE');
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Similar to above filters we are aiming to match everything in
+    // an array by a certain criteria and return mutliple results
+    // so we utilize filter.
   },
 
   totalCapacities() {
-    // Create an object where the keys are 'feCapacity' and 'beCapacity',
-    // and the values are the total capacity for all classrooms in each program e.g.
-    // {
-    //   feCapacity: 110,
-    //   beCapacity: 96
-    // }
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = classrooms.reduce((acc, classroom) => {
+      if (classroom.program === 'FE') {
+        acc.feCapacity ? acc.feCapacity += classroom.capacity
+          : acc.feCapacity = classroom.capacity;
+      } else {
+        acc.beCapacity ? acc.beCapacity += classroom.capacity
+          : acc.beCapacity = classroom.capacity;
+      }
+      return acc;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we want to create a single object so we'll use reduce
+    // We want to check if the record we are iterating over
+    // is FE or BE and then add+ the capacity  
+    // to the respective capacity property
   },
 
   sortByCapacity() {
-    // Return the array of classrooms sorted by their capacity (least capacity to greatest)
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = classrooms.sort((a, b) => (a.capacity - b.capacity));
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We will want to use sort to sort the array of objects
+    // on capacity
   }
 };
 
@@ -309,60 +328,58 @@ const classPrompts = {
 
 const nationalParksPrompts = {
   getParkVisitList() {
-    /// Return an object containing the names of which parks I need to visit
-    // and the ones I have already visited eg:
-    // {
-    //   parksToVisit: ["Yellowstone", "Glacier", "Everglades"],
-    //   parksVisited: ["Rocky Mountain", "Acadia", "Zion"]
-    //}
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = nationalParks.reduce((acc, park) => {
+      if (park.visited) {
+        acc.parksVisited ? acc.parksVisited.push(park.name)
+          : acc.parksVisited = [park.name];
+      } else {
+        acc.parksToVisit ? acc.parksToVisit.push(park.name)
+          : acc.parksToVisit = [park.name];
+      }
+      return acc;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We ultimately want to create a single object 
+    // with two properties so we will utilize reduce here
+    // For each park we are checking if we've already created 
+    // the parksVisisted and parksToVisit properties to see if they're
+    // already created
   },
 
   getParkInEachState() {
-    // Return an array of objects where the key is the state and the value is its National Park
-    // eg: [ { Colorado: 'Rocky Mountain' },
-    // { Wyoming: 'Yellowstone' },
-    // { Montana: 'Glacier' },
-    // { Maine: 'Acadia' },
-    // { Utah: 'Zion' },
-    // { Florida: 'Everglades' } ]
-
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = nationalParks.map(park => {
+      const statePair = {};
+      statePair[park.location] = park.name;
+      return statePair;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // There are no duplicates, so we are creating an array
+    // of the same length, we'll utilize map for this to 
+    // restructure the array.
   },
 
   getParkActivities() {
-    // Return an array of all the activities I can do
-    // in a National Park. Make sure to exclude duplicates. eg:
-    // [ 'hiking',
-    //   'shoeshoing',
-    //   'camping',
-    //   'fishing',
-    //   'boating',
-    //   'watching wildlife',
-    //   'cross-country skiing',
-    //   'swimming',
-    //   'bird watching',
-    //   'canyoneering',
-    //   'backpacking',
-    //   'rock climbing' ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    const activityList = [];
+    nationalParks.forEach(park => {
+      park.activities.forEach(activity => {
+        if(!activityList.includes(activity)) {
+          activityList.push(activity);
+        }
+      });
+    });
+    return activityList;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We want to run through each object in the array
+    // reference the activities property and then we also want
+    // to iterate through that array and add to a holding
+    // activity array. We could use either forEach or reduce.
   }
-}
+};
 
 
 
@@ -380,30 +397,29 @@ const nationalParksPrompts = {
 // DATASET: breweries from ./datasets/breweries
 const breweryPrompts = {
   getBeerCount() {
-    // Return the total beer count of all beers for every brewery e.g.
-    // 40
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = breweries.reduce((acc, brewery) => {
+      acc += brewery.beers.length;
+      return acc;
+    }, 0);
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We can use reduce to set a counter which we iterate based on the 
+    // beers.length of each brewery
   },
 
   getBreweryBeerCount() {
-    // Return an array of objects where each object has the name of a brewery
-    // and the count of the beers that brewery has e.g.
-    // [
-    //  { name: 'Little Machine Brew', beerCount: 12 },
-    //  { name: 'Ratio Beerworks', beerCount: 5},
-    // ...etc.
-    // ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = breweries.map(brewery => {
+      const countInstance = {};
+      countInstance.name = brewery.name;
+      countInstance.beerCount = brewery.beers.length;
+      return countInstance;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We will use map to create a newly structured array as we want 
+    // one element for each brewery
   },
 
   findHighestAbvBeer() {
@@ -411,11 +427,12 @@ const breweryPrompts = {
     // e.g.
     // { name: 'Barrel Aged Nature\'s Sweater', type: 'Barley Wine', abv: 10.9, ibu: 40 }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
-
     // Annotation:
-    // Write your annotation here as a comment
+    // There are a number of ways we could approach this one. We could use a 
+    // forEach loop on each brewery, and then a sort descending on ABV fetching
+    // top index position. We could also use a reduce and foreach check all the beers
+    // setting the accumulator as the current indexed beer if the ABV is higher than the
+    // beer present in the accumulator. This approach is probably a bit more condensed. 
   }
 };
 
