@@ -427,6 +427,17 @@ const breweryPrompts = {
     // e.g.
     // { name: 'Barrel Aged Nature\'s Sweater', type: 'Barley Wine', abv: 10.9, ibu: 40 }
 
+    const result = breweries.reduce((highestAbv, brewery) => {
+      brewery.beers.forEach(beer => {
+        if(beer.abv > highestAbv.abv) {
+          highestAbv = beer;
+        }
+      });
+      return highestAbv;
+    }, {abv:0});
+    return result;
+
+
     // Annotation:
     // There are a number of ways we could approach this one. We could use a 
     // forEach loop on each brewery, and then a sort descending on ABV fetching
@@ -469,71 +480,91 @@ const breweryPrompts = {
 // DATASET: instructors, cohorts from ./datasets/turing
 const turingPrompts = {
   studentsForEachInstructor() {
-    // Return an array of instructors where each instructor is an object
-    // with a name and the count of students in their module. e.g.
-    // [
-    //  { name: 'Pam', studentCount: 21 },
-    //  { name: 'Robbie', studentCount: 18 }
-    // ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = instructors.map(instructor => {
+      const studentRatio = {};
+      studentRatio.name = instructor.name;
+      cohorts.forEach(cohort => {
+        if(cohort.module === instructor.module) {
+          studentRatio.studentCount = cohort.studentCount;
+        }
+      });
+      return studentRatio;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We want to create an array of the same number of items as
+    // the instructors array, so we can use map, and we will have
+    // to use a foreach to iterate through cohorts to find the student count
   },
 
   studentsPerInstructor() {
-    // Return an object of how many students per teacher there are in each cohort e.g.
-    // {
-    // cohort1806: 9,
-    // cohort1804: 10.5
-    // }
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cohorts.reduce((studentRatio, cohort) => {
+      let teacherCount = 0;
+      instructors.forEach(instructor => {
+        if(instructor.module === cohort.module) {
+          teacherCount++;
+        }
+      });
+      studentRatio[`cohort${cohort.cohort}`] = cohort.studentCount / teacherCount;
+      return studentRatio;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We will use reduce to create a single object. We aim to check
+    // We will check for each cohort how many instructors in the instructors
+    // array match the module, and then divide the studentCount by that match count 
   },
 
   modulesPerTeacher() {
-    // Return an object where each key is an instructor name and each value is
-    // an array of the modules they can teach based on their skills. e.g.:
-    // {
-    //     Pam: [2, 4],
-    //     Brittany: [2, 4],
-    //     Nathaniel: [2, 4],
-    //     Robbie: [4],
-    //     Leta: [2, 4],
-    //     Travis: [1, 2, 3, 4],
-    //     Louisa: [1, 2, 3, 4],
-    //     Christie: [1, 2, 3, 4],
-    //     Will: [1, 2, 3, 4]
-    //   }
+    const result = instructors.reduce((acc, instructor) => {
+      acc[instructor.name] = [...new Set(instructor.teaches.reduce((acc, topic) => {
+        cohorts.forEach(cohort => {
+          if(cohort.curriculum.includes(topic)) {
+            acc.push(cohort.module);
+          }
+        });
+        return acc;
+      }, []))].sort();
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+      return acc;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We will continue to use the reduce, in this check however
+    // we will use it twice, on the second time iterating
+    // through the teaches array of each instructor and checking 
+    // if each cohort.curriculum includes item, and if so adding 
+    // cohort.module to the respective accumulator 
+    // we will also need to remove duplicates and sort them 
+    // which we will handle using Set and sort 
   },
 
   curriculumPerTeacher() {
-    // Return an object where each key is a curriculum topic and each value is
-    // an array of instructors who teach that topic e.g.:
-    // {
-    //   html: [ 'Travis', 'Louisa' ],
-    //   css: [ 'Travis', 'Louisa' ],
-    //   javascript: [ 'Travis', 'Louisa', 'Christie', 'Will' ],
-    //   recursion: [ 'Pam', 'Leta' ]
-    // }
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = cohorts.reduce((topics, cohort) => {
+      cohort.curriculum.forEach(topic => {
+        topics[topic] = instructors.reduce((teaches, instructor) => {
+          if(instructor.teaches.includes(topic)) {
+            teaches.push(instructor.name);
+          }
+          return teaches;
+        }, []);
+      });
+      return topics;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we want to run through the curriculum of each cohort
+    // and use reduce to create a new object. For each cohort we 
+    // will reference the curriculum and for each item we create a new key in the 
+    // object based on the specific index of the curriculum. We then run reduce
+    // to create the value assigned to the property, running through the 
+    // instructors and using reduce to create another array. If the instructor 
+    // teaches array includes the index topic we push the instructor name 
+    // into that array.
   }
 };
 
@@ -556,19 +587,25 @@ const turingPrompts = {
 // DATASET: bosses, sidekicks from ./datasets/bosses
 const bossPrompts = {
   bossLoyalty() {
-    // Create an array of objects that each have the name of the boss and the sum
-    // loyalty of all their sidekicks. e.g.:
-    // [
-    //   { bossName: 'Jafar', sidekickLoyalty: 3 },
-    //   { bossName: 'Ursula', sidekickLoyalty: 20 },
-    //   { bossName: 'Scar', sidekickLoyalty: 16 }
-    // ]
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = Object.keys(bosses).map(boss => {
+      const loyalty = {
+        bossName : bosses[boss].name,
+        sidekickLoyalty: sidekicks.filter(sidekick => { return bosses[boss].name === sidekick.boss;}).reduce((acc,sidekick) => {
+          acc += sidekick.loyaltyToBoss;
+          return acc;
+        }, 0),
+      };
+      return loyalty;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    //the data structure here is slightly different as we're dealing with 
+    // an object with nested objects as opposed to an array of objects
+    // we will need to access all the keys first and then we will want to 
+    // create an array with one element for each boss so we can utilize map
+    // filter the sidekicks and check if their boss property matches bossname 
+    // if so total up the loyaltyToBoss of all matches using reduce 
   }
 };
 
@@ -606,11 +643,23 @@ const astronomyPrompts = {
     //     color: 'red' }
     // ]
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
-    return result;
+    // const result = stars.filter(star => {
+    //   Object.keys(constellations).forEach(constellation => {
+
+    //     return 
+    //   )};
+    // });
+    // return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // 
+
+    // contact instructors, this is also confusing. It could be approached from 
+    // two angles, fetching the stars from the stars property of the constellations
+    // object. Alternatively however you could match on the name property of the 
+    // constellation and link that with the constellation property of the 
+    // individual stars and it should achieve the same result if that data is 
+    // correct. However, then Hadar should also be included in the results
   },
 
   starsByColor() {
@@ -624,11 +673,20 @@ const astronomyPrompts = {
     //   red: [{obj}]
     // }
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = stars.reduce((starColors, star) => {
+      if(!starColors[star.color]) {
+        starColors[star.color] = stars.filter(index => {return star.color === index.color;});
+      }
+      return starColors;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we will want to utilize reduce to create a new object with a 
+    // key of each color where unique, and at instantiation of that key
+    // we we will want to add the containing star object as a property in a new
+    // array, for all future matches of color, we will push the matching
+    // star object into the array.
   },
 
   constellationsStarsExistIn() {
@@ -650,7 +708,7 @@ const astronomyPrompts = {
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Error in testing here. Wait to sync down, results out of order. 
   }
 };
 
@@ -673,27 +731,45 @@ const astronomyPrompts = {
 // DATASET: charaters, weapons from ./datasets/ultima
 const ultimaPrompts = {
   totalDamage() {
-
-    // Return the sum of the amount of damage for all the weapons that our characters can use
-    // Answer => 113
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = characters.reduce((acc, character) => {
+      character.weapons.forEach(weapon => {
+        acc += weapons[weapon].damage;
+      });
+      return acc;
+    }, 0);
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we want to reduce to sum and then go through each character, 
+    // for each of their weapons we want to add the corresponding weapon
+    // damage from the weapons object to the accumulator 
   },
 
   charactersByTotal() {
-
-    // Return the sum damage and total range for each character as an object.
-    // ex: [ { Avatar: { damage: 27, range: 24 }, { Iolo: {...}, ...}
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = characters.map(character => {
+      const charObj = {};
+      charObj[character.name] = {
+        damage:character.weapons.reduce((acc, weapon) => {
+          acc += weapons[weapon].damage;
+          return acc;
+        },0),
+        range: character.weapons.reduce((acc, weapon) => {
+          acc += weapons[weapon].range;
+          return acc;
+        }, 0)
+      };
+      return charObj;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we want to do an operation similar to the prior one, except now
+    // we want one result for each character, so we can use map to create an 
+    // instance for each character, in this case we want to make an object
+    // and we want that object to have one property, the character name, with
+    // a value of their possible damage and range, for which we can utilize
+    // the previous function modified to check just that characters weapons
+    // as opposed to all possible weapons
   },
 };
 
@@ -716,21 +792,25 @@ const ultimaPrompts = {
 // DATASET: dinosaurs, humans, movies from ./datasets/dinosaurs
 const dinosaurPrompts = {
   countAwesomeDinosaurs() {
-    // Return an object where each key is a movie title and each value is the
-    // number of awesome dinosaurs in that movie. e.g.:
-    // {
-    //   'Jurassic Park': 5,
-    //   'The Lost World: Jurassic Park': 8,
-    //   'Jurassic Park III': 9,
-    //   'Jurassic World': 11,
-    //   'Jurassic World: Fallen Kingdom': 18
-    // }
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = movies.reduce((dinoTracker, movie) => {
+      if (!dinoTracker[movie.title]) {
+        dinoTracker[movie.title] = movie.dinos.reduce((acc, dino) => {
+          if(dinosaurs[dino].isAwesome) {
+            acc++;
+          }
+          return acc;
+        }, 0);
+      }
+      return dinoTracker;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // As we want our output for this function to be an object, we'll use reduce
+    // instead of map, despite this running for each movie. We want to create
+    // a new property for each movie with the value being a reduce count where
+    // we take the dinos property of the movie and run through the dinosaurs 
+    // object to check if the dinosaurs are awesome to know which to add to the count
   },
 
   averageAgePerMovie() {
@@ -759,11 +839,35 @@ const dinosaurPrompts = {
       }
     */
 
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const result = movies.reduce((ageAverage, movie) => {
+      if (!ageAverage[movie.director]) {
+        let directorMovies = movies.filter(filterMovie => 
+        { return filterMovie.director === movie.director; });
+        ageAverage[movie.director] = 
+        directorMovies.reduce((movieList, movieItem) => 
+        {if (!movieList[movieItem.title]) {
+          movieList[movieItem.title] = 
+          Math.floor(movieItem.cast.reduce((acc, castMember) => {
+            acc += movieItem.yearReleased - humans[castMember].yearBorn; 
+            return acc;
+          }, 0)/movieItem.cast.length);
+        }
+        return movieList;
+        }, {});
+      }
+      return ageAverage;
+    }, {});
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // Here we want to use reduce to return an object, that object will
+    // create a key for each movie based on the director, and it will set 
+    // the value using another reduce which will return corresponding movies
+    // using a filter and for each of those run through using another reduce
+    // to take the movie release date - human birthdates for age with adds to
+    // the accumulator and the result of that reduce gets divided by cast.length
+    // to fetch average 
+
   },
 
   uncastActors() {
@@ -791,12 +895,40 @@ const dinosaurPrompts = {
         imdbStarMeterRating: 0
       }]
     */
-
-    const result = 'REPLACE WITH YOUR RESULT HERE';
+    const jurassicList = movies.reduce((movieList, movie) => {
+      movie.cast.forEach(castMember => {
+        movieList.push(castMember);
+      });
+      return movieList;
+    }, []);
+    
+    const result = Object.keys(humans).reduce((uncastArray, human) => {
+      if (!jurassicList.includes(human)) {
+        const uncastList = {};
+        uncastList.name = human;
+        uncastList.nationality = humans[human].nationality;
+        uncastList.imdbStarMeterRating = humans[human].imdbStarMeterRating;
+        uncastArray.push(uncastList);
+      }
+      return uncastArray;
+    }, []).sort((indexA, indexB) => {
+      if (indexA.nationality < indexB.nationality) {
+        return -1;
+      }
+      if (indexA.nationality > indexB.nationality) {
+        return 1;
+      }
+      return 0;
+    });
     return result;
 
     // Annotation:
-    // Write your annotation here as a comment
+    // We have to approach this from a few angles, first we have to fetch a 
+    // consolidated list of all cast members from all the movies
+    // then we want to look through the humans object to find any records 
+    // which are not in that list. We want to add those into a new array
+    // of objects with their respective information excluding yearBorn
+    // that array will then need to be sorted on nationality.
   },
 
   actorsAgesInMovies() {
